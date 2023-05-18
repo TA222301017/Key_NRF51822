@@ -29,7 +29,7 @@ AESLib aesLib;
 
 // AES Encryption Key, secret key for encrypt and decrpyt
 byte aes_key[] = {0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31,
-                  0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31};
+                  0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x32};
 
 // AES Initialization Vector, company's personal key for encrypt and decrpyt
 byte aes_iv[N_BLOCK] = {0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31,
@@ -41,7 +41,7 @@ int stateKeys = 0;                // 0->unconnectable, viseversa
 unsigned long long startTime = 0; // Timeout counter
 
 const unsigned char device_template[4] = {0x53, 0x41, 0x43, 0x5F};
-const unsigned char device_id[4] = {0x30, 0x30, 0x30, 0x30};
+const unsigned char device_id[4] = {0x30, 0x30, 0x30, 0x31};
 
 unsigned char serviceData[12];
 
@@ -163,6 +163,10 @@ void loop() {
                            enc_iv);
             responseMessage.setValue((char *)resultMessage);
           }
+
+          if((millis() - startTime) > 3000){
+            central.disconnect();
+            }
         }
 
         // event central disconnect
@@ -202,7 +206,8 @@ void loop() {
         broadcastMessage.setValue(serviceData, 11);
       }
 
-    } else {
+    } 
+    else {
       //     peripheral always disconnect until user push button
       central.disconnect();
     }
