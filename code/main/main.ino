@@ -38,12 +38,14 @@ byte aes_iv[N_BLOCK] = {0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31,
                        };
 
 // variabel for state management and message
-int stateButton = 0;              // 0->unpushed, viseversa
-int stateKeys = 0;                // 0->unconnectable, viseversa
-unsigned long long startTime = 0; // Timeout counter
+int stateButton = 0;                 // 0->unpushed, viseversa
+int stateKeys = 0;                   // 0->unconnectable, viseversa
+int stateLED = 0;                    // 0-> OFF, viceversa
+unsigned long long startTime = 0;    // Timeout counter for state
+unsigned long long startTimeLED = 0; // Timeout counter for LED in request access
 
 const unsigned char device_template[4] = {0x53, 0x41, 0x43, 0x5F};
-const unsigned char device_id[4] = {0x30, 0x30, 0x30, 0x31};
+const unsigned char device_id[4] = {0x30, 0x30, 0x31, 0x30};
 
 unsigned char serviceData[12];
 
@@ -80,6 +82,7 @@ void setup() {
 
   // initialization BLE
   blePeripheral.begin();
+  blePeripheral.setTxPower(4);
   broadcastMessage.broadcast();
 
   // initialization AESLib
@@ -132,6 +135,9 @@ void loop() {
 
         // take time start connectable
         startTime = millis();
+        startTimeLED = millis();
+        digitalWrite(LED_PIN, HIGH);
+        stateLED = 1;
       }
     }
   }
@@ -194,10 +200,22 @@ void loop() {
       broadcastMessage.setValue(serviceData, 11);
     }
 
+    if ((millis() - startTimeLED) > 1000) {
+        if (stateLED == 1) {
+          digitalWrite(LED_PIN, LOW);
+          stateLED = 0;
+        }
+        else {
+          digitalWrite(LED_PIN, HIGH);
+          stateLED=1;
+        }
+        startTimeLED = millis();
+      }
     // check timeout time
     if ((millis() - startTime) > 3000) {
       // make NRF unconnectable
       stateKeys = 0;
+      digitalWrite(LED_PIN, LOW);
 
       // send notification to PSOC unconnectable
       for (int i = 0; i < 8; i++) {
